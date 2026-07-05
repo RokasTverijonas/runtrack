@@ -6,6 +6,8 @@ import com.rokas.runtrack.entity.User;
 import com.rokas.runtrack.repository.UserRepository;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 public class UserService {
     private final UserRepository userRepository;
@@ -25,6 +27,22 @@ public class UserService {
                 savedUser.getName(),
                 savedUser.getEmail(),
                 savedUser.getCreatedAt()
+        );
+    }
+
+    public List<UserResponse> getAllUsers() {
+        return userRepository.findAll()
+                .stream()
+                .map(this::mapToResponse)
+                .toList();
+    }
+
+    private UserResponse mapToResponse(User user) {
+        return new UserResponse(
+                user.getId(),
+                user.getName(),
+                user.getEmail(),
+                user.getCreatedAt()
         );
     }
 }
