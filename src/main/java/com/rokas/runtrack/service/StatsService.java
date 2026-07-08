@@ -1,13 +1,20 @@
 package com.rokas.runtrack.service;
 
 import com.rokas.runtrack.dto.StatsResponse;
+import com.rokas.runtrack.dto.WeeklyStatsResponse;
 import com.rokas.runtrack.entity.Activity;
 import com.rokas.runtrack.entity.User;
 import com.rokas.runtrack.repository.ActivityRepository;
 import com.rokas.runtrack.repository.UserRepository;
 import org.springframework.stereotype.Service;
 
+import java.time.DayOfWeek;
+import java.time.LocalDate;
+import java.time.temporal.TemporalAdjusters;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class StatsService {
@@ -39,6 +46,62 @@ public class StatsService {
                 totalElevationGain,
                 longestRunKm
         );
+    }
+
+    public List<WeeklyStatsResponse> getWeeklyStats(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User with id: " + userId + " was not found"));
+        List<Activity> activities = activityRepository.findByUser(user);
+
+        Map<LocalDate, List<Activity>> activitiesByWeek = new HashMap<>();
+
+        for(Activity activity : activities) {
+            LocalDate activityDate = activity.getStartedAt().toLocalDate();
+
+            LocalDate weekStart = activityDate.with(
+                    TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY)
+            );
+
+            activitiesByWeek
+                    .computeIfAbsent(weekStart, key -> new ArrayList<>())
+                    .add(activity);
+        }
+
+        List<WeeklyStatsResponse> weeklyStats = new ArrayList<>();
+
+        for(LocalDate weekStart : activitiesByWeek.keySet()) {
+            List<Activity> weekActivities = activitiesByWeek.get(weekStart);
+
+            Integer totalRuns = weekActivities.size();
+
+            Double totalDistanceMeters = 0.0;
+            Double totalElapsedSeconds = 0.0;
+
+            for(Activity activity : weekActivities) {
+                totalDistanceMeters += activity.getDistanceMeters();
+                totalElapsedSeconds += activity.getElapsedSeconds();
+            }
+
+            Double totalDistanceKm = totalDistanceMeters / 1000.0;
+
+            Double averagePace = 0.0;
+
+            if(totalDistanceKm > 0) {
+                Double totalDurationMinutes = totalElapsedSeconds / 60.0;
+                averagePace = totalDurationMinutes / totalDistanceKm;
+            }
+
+            WeeklyStatsResponse response = new WeeklyStatsResponse(
+                    weekStart,
+                    totalDistanceKm,
+                    averagePace,
+                    totalRuns
+            );
+
+            weeklyStats.add(response);
+        }
+        weeklyStats.sort((a, b) -> a.weekStart().compareTo(b.weekStart()));
+        return weeklyStats;
     }
 
     private Double calculateTotalDistanceKm(List<Activity> activities) {
