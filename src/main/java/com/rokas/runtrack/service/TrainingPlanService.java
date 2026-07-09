@@ -47,6 +47,19 @@ public class TrainingPlanService {
                 .toList();
     }
 
+    public TrainingPlanResponse getTrainingPlanByUserAndId(Long userId, Long planId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User with id: " + userId + " was not found"));
+
+        TrainingPlan trainingPlan = trainingPlanRepository.findById(planId)
+                .orElseThrow(() -> new RuntimeException("Training plan with id: " + planId + " was not found"));
+
+        if (!trainingPlan.getUser().getId().equals(user.getId())) {
+            throw new RuntimeException("Training plan does not belong to this user");
+        }
+        return mapToResponse(trainingPlan);
+    }
+
     private TrainingPlanResponse mapToResponse(TrainingPlan trainingPlan) {
         return new TrainingPlanResponse(
                 trainingPlan.getId(),

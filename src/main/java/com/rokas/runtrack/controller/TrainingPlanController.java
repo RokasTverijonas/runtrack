@@ -26,4 +26,9 @@ public class TrainingPlanController {
     public List<TrainingPlanResponse> getTrainingPlansByUser(@PathVariable("userId") Long userId) {
         return trainingPlanService.getTrainingPlansByUser(userId);
     }
+
+    @GetMapping("/{planId}")
+    public TrainingPlanResponse getTrainingPlanByUserAndId(@PathVariable("userId") Long userId, @PathVariable("planId") Long planId) {
+        return trainingPlanService.getTrainingPlanByUserAndId(userId, planId);
+    }
 }
