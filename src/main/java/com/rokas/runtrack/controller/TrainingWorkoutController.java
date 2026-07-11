@@ -3,6 +3,7 @@ package com.rokas.runtrack.controller;
 import com.rokas.runtrack.dto.TrainingWorkoutCreateRequest;
 import com.rokas.runtrack.dto.TrainingWorkoutResponse;
 import com.rokas.runtrack.service.TrainingWorkoutService;
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -17,7 +18,7 @@ public class TrainingWorkoutController {
     }
 
     @PostMapping("/training-plans/{planId}/workouts")
-    public TrainingWorkoutResponse createWorkout(@PathVariable("planId") Long planId, @RequestBody TrainingWorkoutCreateRequest request) {
+    public TrainingWorkoutResponse createWorkout(@PathVariable("planId") Long planId, @Valid @RequestBody TrainingWorkoutCreateRequest request) {
         return trainingWorkoutService.createWorkout(planId, request);
 
     }

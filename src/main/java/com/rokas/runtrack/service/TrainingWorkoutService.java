@@ -4,6 +4,7 @@ import com.rokas.runtrack.dto.TrainingWorkoutCreateRequest;
 import com.rokas.runtrack.dto.TrainingWorkoutResponse;
 import com.rokas.runtrack.entity.TrainingPlan;
 import com.rokas.runtrack.entity.TrainingWorkout;
+import com.rokas.runtrack.exception.ResourceNotFoundException;
 import com.rokas.runtrack.repository.TrainingPlanRepository;
 import com.rokas.runtrack.repository.TrainingWorkoutRepository;
 import org.springframework.stereotype.Service;
@@ -22,7 +23,7 @@ public class TrainingWorkoutService {
 
     public TrainingWorkoutResponse createWorkout(Long planId, TrainingWorkoutCreateRequest request) {
         TrainingPlan trainingPlan = trainingPlanRepository.findById(planId)
-                .orElseThrow(() -> new RuntimeException("Training plan with id: " + planId + " was not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Training plan with id: " + planId + " was not found"));
 
         TrainingWorkout trainingWorkout = new TrainingWorkout();
         trainingWorkout.setTrainingPlan(trainingPlan);
@@ -42,7 +43,7 @@ public class TrainingWorkoutService {
 
     public List<TrainingWorkoutResponse> getWorkoutsByPlan(Long planId) {
         TrainingPlan trainingPlan = trainingPlanRepository.findById(planId)
-                .orElseThrow(() -> new RuntimeException("Training plan with id: " + planId + " was not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Training plan with id: " + planId + " was not found"));
 
         return trainingWorkoutRepository.findByTrainingPlan(trainingPlan)
                 .stream()
@@ -52,7 +53,7 @@ public class TrainingWorkoutService {
 
     public TrainingWorkoutResponse markWorkoutAsCompleted(Long workoutId) {
         TrainingWorkout trainingWorkout = trainingWorkoutRepository.findById(workoutId)
-                .orElseThrow(() -> new RuntimeException("Training workout with id: " + workoutId + " was not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Training workout with id: " + workoutId + " was not found"));
 
         trainingWorkout.setCompleted(true);
 

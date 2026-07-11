@@ -3,6 +3,7 @@ package com.rokas.runtrack.controller;
 import com.rokas.runtrack.dto.UserCreateRequest;
 import com.rokas.runtrack.dto.UserResponse;
 import com.rokas.runtrack.service.UserService;
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -17,7 +18,7 @@ public class UserController {
     }
 
     @PostMapping
-    public UserResponse createUser(@RequestBody UserCreateRequest request) {
+    public UserResponse createUser(@Valid @RequestBody UserCreateRequest request) {
         return userService.createUser(request);
     }
 

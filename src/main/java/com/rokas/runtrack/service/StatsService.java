@@ -4,6 +4,7 @@ import com.rokas.runtrack.dto.StatsResponse;
 import com.rokas.runtrack.dto.WeeklyStatsResponse;
 import com.rokas.runtrack.entity.Activity;
 import com.rokas.runtrack.entity.User;
+import com.rokas.runtrack.exception.ResourceNotFoundException;
 import com.rokas.runtrack.repository.ActivityRepository;
 import com.rokas.runtrack.repository.UserRepository;
 import org.springframework.stereotype.Service;
@@ -29,7 +30,7 @@ public class StatsService {
 
     public StatsResponse getUserStats(Long userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User with id: " + userId + " was not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User with id: " + userId + " was not found"));
         List<Activity> activities = activityRepository.findByUser(user);
 
         Integer totalRuns = activities.size();
@@ -50,7 +51,7 @@ public class StatsService {
 
     public List<WeeklyStatsResponse> getWeeklyStats(Long userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User with id: " + userId + " was not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User with id: " + userId + " was not found"));
         List<Activity> activities = activityRepository.findByUser(user);
 
         Map<LocalDate, List<Activity>> activitiesByWeek = new HashMap<>();

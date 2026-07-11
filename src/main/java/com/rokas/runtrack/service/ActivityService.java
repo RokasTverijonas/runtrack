@@ -4,6 +4,7 @@ import com.rokas.runtrack.dto.ActivityCreateRequest;
 import com.rokas.runtrack.dto.ActivityResponse;
 import com.rokas.runtrack.entity.Activity;
 import com.rokas.runtrack.entity.User;
+import com.rokas.runtrack.exception.ResourceNotFoundException;
 import com.rokas.runtrack.repository.ActivityRepository;
 import com.rokas.runtrack.repository.UserRepository;
 import org.springframework.stereotype.Service;
@@ -23,7 +24,7 @@ public class ActivityService {
 
     public ActivityResponse createActivity(Long userId, ActivityCreateRequest request) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User with id: " + userId + " was not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User with id: " + userId + " was not found"));
         Activity activity = new Activity();
         activity.setUser(user);
         activity.setName(request.name());
@@ -42,7 +43,7 @@ public class ActivityService {
 
     public List<ActivityResponse> getActivitiesByUser(Long userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User with id: " + userId + " was not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User with id: " + userId + " was not found"));
         return activityRepository.findByUser(user)
                 .stream()
                 .map(this::mapToResponse)

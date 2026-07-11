@@ -5,6 +5,7 @@ import com.rokas.runtrack.dto.TrainingPlanResponse;
 import com.rokas.runtrack.entity.TrainingPlan;
 import com.rokas.runtrack.entity.TrainingPlanStatus;
 import com.rokas.runtrack.entity.User;
+import com.rokas.runtrack.exception.ResourceNotFoundException;
 import com.rokas.runtrack.repository.TrainingPlanRepository;
 import com.rokas.runtrack.repository.UserRepository;
 import org.springframework.stereotype.Service;
@@ -23,7 +24,7 @@ public class TrainingPlanService {
 
     public TrainingPlanResponse createTrainingPlan(Long userId, TrainingPlanCreateRequest request) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User with id: " + userId + " was not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User with id: " + userId + " was not found"));
         TrainingPlan trainingPlan = new TrainingPlan();
 
         trainingPlan.setUser(user);
@@ -39,7 +40,7 @@ public class TrainingPlanService {
 
     public List<TrainingPlanResponse> getTrainingPlansByUser(Long userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User with id: " + userId + " was not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User with id: " + userId + " was not found"));
 
         return trainingPlanRepository.findByUser(user)
                 .stream()
@@ -49,10 +50,10 @@ public class TrainingPlanService {
 
     public TrainingPlanResponse getTrainingPlanByUserAndId(Long userId, Long planId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User with id: " + userId + " was not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User with id: " + userId + " was not found"));
 
         TrainingPlan trainingPlan = trainingPlanRepository.findById(planId)
-                .orElseThrow(() -> new RuntimeException("Training plan with id: " + planId + " was not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Training plan with id: " + planId + " was not found"));
 
         if (!trainingPlan.getUser().getId().equals(user.getId())) {
             throw new RuntimeException("Training plan does not belong to this user");

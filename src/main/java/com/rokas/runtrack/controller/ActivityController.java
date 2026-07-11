@@ -3,6 +3,7 @@ package com.rokas.runtrack.controller;
 import com.rokas.runtrack.dto.ActivityCreateRequest;
 import com.rokas.runtrack.dto.ActivityResponse;
 import com.rokas.runtrack.service.ActivityService;
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -18,7 +19,7 @@ public class ActivityController {
     }
 
     @PostMapping
-    public ActivityResponse createActivity(@PathVariable Long userId, @RequestBody ActivityCreateRequest request) {
+    public ActivityResponse createActivity(@PathVariable Long userId, @Valid @RequestBody ActivityCreateRequest request) {
         return activityService.createActivity(userId, request);
     }
 
