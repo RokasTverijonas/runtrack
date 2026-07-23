@@ -4,8 +4,9 @@ import com.rokas.runtrack.dto.AuthResponse;
 import com.rokas.runtrack.dto.LoginRequest;
 import com.rokas.runtrack.dto.RegisterRequest;
 import com.rokas.runtrack.entity.User;
-import com.rokas.runtrack.exception.ResourceNotFoundException;
 import com.rokas.runtrack.repository.UserRepository;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -13,10 +14,12 @@ import org.springframework.stereotype.Service;
 public class AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final JwtService jwtService;
 
-    public AuthService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+    public AuthService(UserRepository userRepository, PasswordEncoder passwordEncoder, JwtService jwtService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.jwtService = jwtService;
     }
 
     public AuthResponse register(RegisterRequest request) {
@@ -31,7 +34,9 @@ public class AuthService {
 
         User savedUser = userRepository.save(user);
 
-        return new AuthResponse("Temporary-token");
+        String token = jwtService.generateToken(savedUser.getEmail());
+
+        return new AuthResponse(token);
 
     }
 
@@ -43,6 +48,9 @@ public class AuthService {
             throw new IllegalArgumentException("Invalid email or password");
         }
 
-        return new AuthResponse("Temporary-token");
+        String token = jwtService.generateToken(user.getEmail());
+
+        return new AuthResponse(token);
     }
+
 }
