@@ -1,5 +1,7 @@
 package com.rokas.runtrack.service;
 
+import com.rokas.runtrack.dto.ActivityResponse;
+import com.rokas.runtrack.dto.StravaActivityResponse;
 import com.rokas.runtrack.dto.StravaAthleteResponse;
 import com.rokas.runtrack.dto.StravaTokenResponse;
 import com.rokas.runtrack.entity.StravaToken;
@@ -17,6 +19,8 @@ import org.springframework.web.client.RestClient;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.Arrays;
+import java.util.List;
 
 @Service
 public class StravaOAuthService {
@@ -108,6 +112,24 @@ public class StravaOAuthService {
                 .header("Authorization", "Bearer " + accessToken)
                 .retrieve()
                 .body(StravaAthleteResponse.class);
+    }
+
+    public List<StravaActivityResponse> getActivities() {
+        StravaToken token = getCurrentUserToken();
+        String accessToken = token.getAccessToken();
+
+        StravaActivityResponse[] activities = restClient
+                .get()
+                .uri("https://www.strava.com/api/v3/athlete/activities")
+                .header("Authorization", "Bearer " + accessToken)
+                .retrieve()
+                .body(StravaActivityResponse[].class);
+
+        if(activities == null) {
+            return List.of();
+        }
+
+        return List.of(activities);
     }
 
 }

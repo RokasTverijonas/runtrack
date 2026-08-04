@@ -1,5 +1,6 @@
 package com.rokas.runtrack.controller;
 
+import com.rokas.runtrack.dto.StravaActivityResponse;
 import com.rokas.runtrack.dto.StravaAthleteResponse;
 import com.rokas.runtrack.dto.StravaTokenResponse;
 import com.rokas.runtrack.entity.User;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.net.URI;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/strava")
@@ -63,6 +65,13 @@ public class StravaController {
         StravaAthleteResponse athlete = stravaOAuthService.getCurrentAthlete();
 
         return ResponseEntity.ok(athlete);
+    }
+
+    @GetMapping("/activities")
+    public ResponseEntity<List<StravaActivityResponse>> getActivities() {
+        final List<StravaActivityResponse> activities = stravaOAuthService.getActivities();
+
+        return ResponseEntity.ok(activities);
     }
 
 
