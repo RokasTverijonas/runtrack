@@ -30,7 +30,10 @@ public class SecurityConfig {
         http.csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(
                         auth
-                        -> auth.requestMatchers("/api/auth/**", "/api/strava/**")
+                        -> auth.requestMatchers(
+                                "/api/auth/**",
+                                        "/api/strava/callback",
+                                        "/error")
                                 .permitAll()
                                 .anyRequest()
                                 .authenticated()

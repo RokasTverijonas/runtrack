@@ -64,4 +64,18 @@ public class UserService {
 
         return mapToResponse(user);
     }
+
+    public User getCurrentAuthenticatedUser() {
+
+        Authentication authentication =
+                SecurityContextHolder.getContext().getAuthentication();
+
+        System.out.println(authentication);
+        System.out.println(authentication.getPrincipal());
+        System.out.println(authentication.getPrincipal().getClass());
+
+        User user = (User) authentication.getPrincipal();
+
+        return (user);
+    }
 }
