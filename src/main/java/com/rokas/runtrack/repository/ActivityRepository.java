@@ -11,5 +11,7 @@ public interface ActivityRepository extends JpaRepository<Activity, Long> {
 
     List<Activity> findByUser(User user);
 
+    List<Activity> findByUserOrderByStartedAtDesc(User user);
+
     Optional<Activity> findByStravaActivityId(Long stravaActivityId);
 }

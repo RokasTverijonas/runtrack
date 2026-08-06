@@ -16,10 +16,12 @@ public class ActivityService {
 
     private final ActivityRepository activityRepository;
     private final UserRepository userRepository;
+    private final UserService userService;
 
-    public ActivityService(ActivityRepository activityRepository, UserRepository userRepository) {
+    public ActivityService(ActivityRepository activityRepository, UserRepository userRepository, UserService userService) {
         this.activityRepository = activityRepository;
         this.userRepository = userRepository;
+        this.userService = userService;
     }
 
     public ActivityResponse createActivity(Long userId, ActivityCreateRequest request) {
@@ -70,6 +72,16 @@ public class ActivityService {
         Double pace = durationMinutes / distanceKm;
 
         return pace;
+    }
+
+    public List<ActivityResponse> getCurrentUserActivities() {
+        User user = userService.getCurrentAuthenticatedUser();
+
+        return activityRepository.findByUserOrderByStartedAtDesc(user)
+                .stream()
+                .map(this::mapToResponse)
+                .toList();
+
     }
 
 }

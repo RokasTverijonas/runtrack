@@ -1,15 +1,14 @@
 package com.rokas.runtrack.controller;
 
-import com.rokas.runtrack.dto.ActivityCreateRequest;
 import com.rokas.runtrack.dto.ActivityResponse;
 import com.rokas.runtrack.service.ActivityService;
-import jakarta.validation.Valid;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/users/{userId}/activities")
+@RequestMapping("/api/activities")
 public class ActivityController {
 
     private final ActivityService activityService;
@@ -18,13 +17,12 @@ public class ActivityController {
         this.activityService = activityService;
     }
 
-    @PostMapping
-    public ActivityResponse createActivity(@PathVariable Long userId, @Valid @RequestBody ActivityCreateRequest request) {
-        return activityService.createActivity(userId, request);
+    @GetMapping
+    public ResponseEntity<List<ActivityResponse>> getCurrentUserActivities() {
+        List<ActivityResponse> activities = activityService.getCurrentUserActivities();
+
+        return ResponseEntity.ok(activities);
     }
 
-    @GetMapping
-    public List<ActivityResponse> getActivitiesByUser(@PathVariable Long userId) {
-        return activityService.getActivitiesByUser(userId);
-    }
+
 }
