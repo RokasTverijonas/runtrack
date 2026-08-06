@@ -9,10 +9,7 @@ import com.rokas.runtrack.service.StravaOAuthService;
 import com.rokas.runtrack.service.UserService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
 import java.util.List;
@@ -72,6 +69,12 @@ public class StravaController {
         final List<StravaActivityResponse> activities = stravaOAuthService.getActivities();
 
         return ResponseEntity.ok(activities);
+    }
+
+    @PostMapping("/sync")
+    public ResponseEntity<Void> syncActivities() {
+        stravaOAuthService.syncActivities();
+        return ResponseEntity.ok().build();
     }
 
 

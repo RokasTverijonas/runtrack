@@ -2,6 +2,8 @@ package com.rokas.runtrack.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import java.time.OffsetDateTime;
+
 public record StravaActivityResponse(
         Long id,
         String name,
@@ -14,7 +16,10 @@ public record StravaActivityResponse(
         @JsonProperty("elapsed_time")
         Integer elapsedTime,
 
+        @JsonProperty("total_elevation_gain")
+        Double totalElevationGain,
+
         @JsonProperty("start_date")
-        String startDate
+        OffsetDateTime startDate
 ) {
 }

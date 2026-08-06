@@ -4,9 +4,11 @@ import com.rokas.runtrack.dto.ActivityResponse;
 import com.rokas.runtrack.dto.StravaActivityResponse;
 import com.rokas.runtrack.dto.StravaAthleteResponse;
 import com.rokas.runtrack.dto.StravaTokenResponse;
+import com.rokas.runtrack.entity.Activity;
 import com.rokas.runtrack.entity.StravaToken;
 import com.rokas.runtrack.entity.User;
 import com.rokas.runtrack.exception.ResourceNotFoundException;
+import com.rokas.runtrack.repository.ActivityRepository;
 import com.rokas.runtrack.repository.StravaTokenRepository;
 import com.rokas.runtrack.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Value;
@@ -38,12 +40,14 @@ public class StravaOAuthService {
     private final UserService userService;
     private final StravaTokenRepository stravaTokenRepository;
     private final UserRepository userRepository;
+    private final ActivityRepository activityRepository;
 
-    public StravaOAuthService(RestClient.Builder builder, UserService userService, StravaTokenRepository stravaTokenRepository, UserRepository userRepository) {
+    public StravaOAuthService(RestClient.Builder builder, UserService userService, StravaTokenRepository stravaTokenRepository, UserRepository userRepository, ActivityRepository activityRepository) {
         this.restClient = builder.build();
         this.userService = userService;
         this.stravaTokenRepository = stravaTokenRepository;
         this.userRepository = userRepository;
+        this.activityRepository = activityRepository;
     }
 
     public String buildAuthorizationUrl(String state) {
@@ -78,7 +82,9 @@ public class StravaOAuthService {
     public void saveStravaToken(StravaTokenResponse response, Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User with id: " + userId + " was not found"));
-        StravaToken token = new StravaToken();
+        StravaToken token = stravaTokenRepository
+                .findByUser(user)
+                        .orElse(new StravaToken());
 
         token.setUser(user);
         token.setAccessToken(response.accessToken());
@@ -130,6 +136,29 @@ public class StravaOAuthService {
         }
 
         return List.of(activities);
+    }
+
+    public void syncActivities() {
+
+        List<StravaActivityResponse> activities = getActivities();
+        User user = userService.getCurrentAuthenticatedUser();
+
+        for(StravaActivityResponse activity : activities) {
+            if(activityRepository.findByStravaActivityId(activity.id()).isEmpty()) {
+                Activity newActivity = new Activity();
+                newActivity.setStravaActivityId(activity.id());
+                newActivity.setUser(user);
+                newActivity.setName(activity.name());
+                newActivity.setDistanceMeters(activity.distance());
+                newActivity.setElapsedSeconds(activity.elapsedTime());
+                newActivity.setAvgPace((activity.elapsedTime() / 60.0) / (activity.distance() / 1000.0));
+                newActivity.setElevationGain(activity.totalElevationGain());
+                newActivity.setStartedAt(activity.startDate().toLocalDateTime());
+                newActivity.setActivityType(activity.type());
+
+                activityRepository.save(newActivity);
+            }
+        }
     }
 
 }
