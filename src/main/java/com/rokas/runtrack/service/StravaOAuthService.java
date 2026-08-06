@@ -109,8 +109,7 @@ public class StravaOAuthService {
     }
 
     public StravaAthleteResponse getCurrentAthlete() {
-        StravaToken token = getCurrentUserToken();
-        String accessToken = token.getAccessToken();
+        String accessToken = getValidAccessToken();
 
         return restClient
                 .get()
@@ -121,8 +120,7 @@ public class StravaOAuthService {
     }
 
     public List<StravaActivityResponse> getActivities() {
-        StravaToken token = getCurrentUserToken();
-        String accessToken = token.getAccessToken();
+        String accessToken = getValidAccessToken();
 
         StravaActivityResponse[] activities = restClient
                 .get()
@@ -159,6 +157,64 @@ public class StravaOAuthService {
                 activityRepository.save(newActivity);
             }
         }
+    }
+
+    public void refreshAccessToken() {
+        User user = userService.getCurrentAuthenticatedUser();
+
+        StravaToken token = stravaTokenRepository
+                .findByUser(user)
+                .orElseThrow(() -> new ResourceNotFoundException("Strava token was not found"));
+
+        String refreshToken = token.getRefreshToken();
+
+        MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
+        body.add("client_id", clientId);
+        body.add("client_secret", clientSecret);
+        body.add("grant_type", "refresh_token");
+        body.add("refresh_token", refreshToken);
+
+        StravaTokenResponse response = restClient
+                .post()
+                .uri("https://www.strava.com/oauth/token")
+                .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                .body(body)
+                .retrieve()
+                .body(StravaTokenResponse.class);
+
+        if(response == null) {
+            throw new IllegalStateException("Failed to refresh Strava access token");
+        }
+
+        token.setAccessToken(response.accessToken());
+        token.setRefreshToken(response.refreshToken());
+        token.setExpiresAt(
+                LocalDateTime.ofInstant(
+                Instant.ofEpochSecond(response.expiresAt()),
+                ZoneId.systemDefault()
+                )
+        );
+
+        stravaTokenRepository.save(token);
+
+    }
+
+    public String getValidAccessToken() {
+        User user = userService.getCurrentAuthenticatedUser();
+        StravaToken token = stravaTokenRepository
+                .findByUser(user)
+                .orElseThrow(() -> new ResourceNotFoundException("Strava token was not found"));
+
+        if(token.getExpiresAt().isBefore(LocalDateTime.now().plusMinutes(1))) {
+            refreshAccessToken();
+        }
+
+        token = stravaTokenRepository
+                .findByUser(user)
+                .orElseThrow(() -> new ResourceNotFoundException("Strava token was not found"));
+
+        return token.getAccessToken();
+
     }
 
 }
