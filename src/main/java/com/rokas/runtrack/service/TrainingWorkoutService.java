@@ -4,6 +4,7 @@ import com.rokas.runtrack.dto.TrainingWorkoutCreateRequest;
 import com.rokas.runtrack.dto.TrainingWorkoutResponse;
 import com.rokas.runtrack.entity.TrainingPlan;
 import com.rokas.runtrack.entity.TrainingWorkout;
+import com.rokas.runtrack.entity.User;
 import com.rokas.runtrack.exception.ResourceNotFoundException;
 import com.rokas.runtrack.repository.TrainingPlanRepository;
 import com.rokas.runtrack.repository.TrainingWorkoutRepository;
@@ -16,14 +17,23 @@ public class TrainingWorkoutService {
     private final TrainingWorkoutRepository trainingWorkoutRepository;
     private final TrainingPlanRepository trainingPlanRepository;
 
-    public TrainingWorkoutService(TrainingWorkoutRepository trainingWorkoutRepository, TrainingPlanRepository trainingPlanRepository) {
+    private final UserService userService;
+
+    public TrainingWorkoutService(TrainingWorkoutRepository trainingWorkoutRepository, TrainingPlanRepository trainingPlanRepository, UserService userService) {
         this.trainingWorkoutRepository = trainingWorkoutRepository;
         this.trainingPlanRepository = trainingPlanRepository;
+        this.userService = userService;
     }
 
     public TrainingWorkoutResponse createWorkout(Long planId, TrainingWorkoutCreateRequest request) {
         TrainingPlan trainingPlan = trainingPlanRepository.findById(planId)
                 .orElseThrow(() -> new ResourceNotFoundException("Training plan with id: " + planId + " was not found"));
+
+        User currentUser = userService.getCurrentAuthenticatedUser();
+
+        if(!trainingPlan.getUser().getId().equals(currentUser.getId())) {
+            throw new ResourceNotFoundException("Training plan with id: " + planId + " was not found");
+        }
 
         TrainingWorkout trainingWorkout = new TrainingWorkout();
         trainingWorkout.setTrainingPlan(trainingPlan);
@@ -45,6 +55,12 @@ public class TrainingWorkoutService {
         TrainingPlan trainingPlan = trainingPlanRepository.findById(planId)
                 .orElseThrow(() -> new ResourceNotFoundException("Training plan with id: " + planId + " was not found"));
 
+        User currentUser = userService.getCurrentAuthenticatedUser();
+
+        if(!trainingPlan.getUser().getId().equals(currentUser.getId())) {
+            throw new ResourceNotFoundException("Training plan with id: " + planId + " was not found");
+        }
+
         return trainingWorkoutRepository.findByTrainingPlan(trainingPlan)
                 .stream()
                 .map(this::mapToResponse)
@@ -54,6 +70,12 @@ public class TrainingWorkoutService {
     public TrainingWorkoutResponse markWorkoutAsCompleted(Long workoutId) {
         TrainingWorkout trainingWorkout = trainingWorkoutRepository.findById(workoutId)
                 .orElseThrow(() -> new ResourceNotFoundException("Training workout with id: " + workoutId + " was not found"));
+
+        User currentUser = userService.getCurrentAuthenticatedUser();
+
+        if(!trainingWorkout.getTrainingPlan().getId().equals(currentUser.getId())) {
+            throw new ResourceNotFoundException("Training plan with id: " + workoutId + " was not found");
+        }
 
         trainingWorkout.setCompleted(true);
 

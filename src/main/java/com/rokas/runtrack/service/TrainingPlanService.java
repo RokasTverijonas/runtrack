@@ -15,16 +15,15 @@ import java.util.List;
 @Service
 public class TrainingPlanService {
     private final TrainingPlanRepository trainingPlanRepository;
-    private final UserRepository userRepository;
+    private final UserService userService;
 
-    public TrainingPlanService(TrainingPlanRepository trainingPlanRepository, UserRepository userRepository) {
+    public TrainingPlanService(TrainingPlanRepository trainingPlanRepository, UserService userService) {
         this.trainingPlanRepository = trainingPlanRepository;
-        this.userRepository = userRepository;
+        this.userService = userService;
     }
 
-    public TrainingPlanResponse createTrainingPlan(Long userId, TrainingPlanCreateRequest request) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User with id: " + userId + " was not found"));
+    public TrainingPlanResponse createTrainingPlan(TrainingPlanCreateRequest request) {
+        User user = userService.getCurrentAuthenticatedUser();
         TrainingPlan trainingPlan = new TrainingPlan();
 
         trainingPlan.setUser(user);
@@ -38,9 +37,8 @@ public class TrainingPlanService {
         return mapToResponse(savedTrainingPlan);
     }
 
-    public List<TrainingPlanResponse> getTrainingPlansByUser(Long userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User with id: " + userId + " was not found"));
+    public List<TrainingPlanResponse> getCurrentUserTrainingPlans() {
+        User user = userService.getCurrentAuthenticatedUser();
 
         return trainingPlanRepository.findByUser(user)
                 .stream()
@@ -48,9 +46,8 @@ public class TrainingPlanService {
                 .toList();
     }
 
-    public TrainingPlanResponse getTrainingPlanByUserAndId(Long userId, Long planId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User with id: " + userId + " was not found"));
+    public TrainingPlanResponse getTrainingPlan(Long planId) {
+        User user = userService.getCurrentAuthenticatedUser();
 
         TrainingPlan trainingPlan = trainingPlanRepository.findById(planId)
                 .orElseThrow(() -> new ResourceNotFoundException("Training plan with id: " + planId + " was not found"));

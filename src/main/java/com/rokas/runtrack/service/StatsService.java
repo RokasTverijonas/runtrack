@@ -20,17 +20,16 @@ import java.util.Map;
 @Service
 public class StatsService {
 
-    private final UserRepository userRepository;
+    private final UserService userService;
     private final ActivityRepository activityRepository;
 
-    public StatsService(UserRepository userRepository, ActivityRepository activityRepository) {
-        this.userRepository = userRepository;
+    public StatsService(UserService userService, ActivityRepository activityRepository) {
+        this.userService = userService;
         this.activityRepository = activityRepository;
     }
 
-    public StatsResponse getUserStats(Long userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User with id: " + userId + " was not found"));
+    public StatsResponse getCurrentUserStats() {
+        User user = userService.getCurrentAuthenticatedUser();
         List<Activity> activities = activityRepository.findByUser(user);
 
         Integer totalRuns = activities.size();
@@ -40,7 +39,7 @@ public class StatsService {
         Double longestRunKm = calculateLongestRunKm(activities);
 
         return new StatsResponse(
-                userId,
+                user.getId(),
                 totalRuns,
                 totalDistanceKm,
                 averagePace,
@@ -49,9 +48,8 @@ public class StatsService {
         );
     }
 
-    public List<WeeklyStatsResponse> getWeeklyStats(Long userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User with id: " + userId + " was not found"));
+    public List<WeeklyStatsResponse> getCurrentUserWeeklyStats() {
+        User user = userService.getCurrentAuthenticatedUser();
         List<Activity> activities = activityRepository.findByUser(user);
 
         Map<LocalDate, List<Activity>> activitiesByWeek = new HashMap<>();

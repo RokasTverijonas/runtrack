@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/users/{userId}/stats")
+@RequestMapping("/api/stats")
 public class StatsController {
 
     private final StatsService statsService;
@@ -21,12 +21,12 @@ public class StatsController {
     }
 
     @GetMapping
-    public StatsResponse getUserStats(@PathVariable("userId") Long userId) {
-        return statsService.getUserStats(userId);
+    public StatsResponse getCurrentUserStats() {
+        return statsService.getCurrentUserStats();
     }
 
     @GetMapping("/weekly")
-    public List<WeeklyStatsResponse> getWeeklyStats(@PathVariable("userId") Long userId) {
-        return statsService.getWeeklyStats(userId);
+    public List<WeeklyStatsResponse> getCurrentUserWeeklyStats() {
+        return statsService.getCurrentUserWeeklyStats();
     }
 }

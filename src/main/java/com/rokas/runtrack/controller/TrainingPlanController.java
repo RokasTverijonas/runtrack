@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/users/{userId}/training-plans")
+@RequestMapping("/api/training-plans")
 public class TrainingPlanController {
 
     private final TrainingPlanService trainingPlanService;
@@ -19,17 +19,17 @@ public class TrainingPlanController {
     }
 
     @PostMapping
-    public TrainingPlanResponse createTrainingPlan(@PathVariable("userId") Long userId, @Valid @RequestBody TrainingPlanCreateRequest request) {
-        return trainingPlanService.createTrainingPlan(userId, request);
+    public TrainingPlanResponse createTrainingPlan(@Valid @RequestBody TrainingPlanCreateRequest request) {
+        return trainingPlanService.createTrainingPlan(request);
     }
 
     @GetMapping
-    public List<TrainingPlanResponse> getTrainingPlansByUser(@PathVariable("userId") Long userId) {
-        return trainingPlanService.getTrainingPlansByUser(userId);
+    public List<TrainingPlanResponse> getCurrentUserTrainingPlans() {
+        return trainingPlanService.getCurrentUserTrainingPlans();
     }
 
     @GetMapping("/{planId}")
-    public TrainingPlanResponse getTrainingPlanByUserAndId(@PathVariable("userId") Long userId, @PathVariable("planId") Long planId) {
-        return trainingPlanService.getTrainingPlanByUserAndId(userId, planId);
+    public TrainingPlanResponse getTrainingPlan(@PathVariable("planId") Long planId) {
+        return trainingPlanService.getTrainingPlan(planId);
     }
 }
