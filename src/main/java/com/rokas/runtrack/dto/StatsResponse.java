@@ -6,6 +6,7 @@ public record StatsResponse(
         Double totalDistanceKm,
         Double averagePace,
         Double totalElevationGain,
-        Double longestRunKm
+        Double longestRunKm,
+        Double avgWeeklyKm
 ) {
 }

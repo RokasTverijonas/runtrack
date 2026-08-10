@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -38,14 +39,42 @@ public class StatsService {
         Double totalElevationGain = calculateTotalElevationGain(activities);
         Double longestRunKm = calculateLongestRunKm(activities);
 
+        Double avgWeeklyKm = calculateAvgWeeklyKm(activities);
+
         return new StatsResponse(
                 user.getId(),
                 totalRuns,
                 totalDistanceKm,
                 averagePace,
                 totalElevationGain,
-                longestRunKm
+                longestRunKm,
+                avgWeeklyKm
         );
+    }
+
+    private Double calculateAvgWeeklyKm(List<Activity> activities) {
+
+        if(activities.isEmpty()) {
+            return 0.0;
+        }
+
+        LocalDate firstDate = activities.stream()
+                .map(activity -> activity.getStartedAt().toLocalDate())
+                .min(LocalDate::compareTo)
+                .orElse(LocalDate.now());
+
+        LocalDate lastDate = activities.stream()
+                .map(activity -> activity.getStartedAt().toLocalDate())
+                .max(LocalDate::compareTo)
+                .orElse(LocalDate.now());
+
+        long days = ChronoUnit.DAYS.between(firstDate, lastDate);
+
+        double weeks = Math.max(days / 7.0, 1.0);
+
+        double totalDistanceKm = calculateTotalDistanceKm(activities);
+
+        return totalDistanceKm / weeks;
     }
 
     public List<WeeklyStatsResponse> getCurrentUserWeeklyStats() {
