@@ -13,6 +13,6 @@ public record TrainingPlanAiRequest(
         Double longestRunKm,
         Double avgPaceMinPerKm,
 
-        List<ActivityResponse> recentActivitiesa
+        List<ActivityResponse> recentActivities
 ) {
 }

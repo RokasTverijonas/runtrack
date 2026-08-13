@@ -1,7 +1,9 @@
 package com.rokas.runtrack.controller;
 
 import com.rokas.runtrack.dto.TrainingPlanAiRequest;
+import com.rokas.runtrack.dto.TrainingPlanAiResponse;
 import com.rokas.runtrack.dto.TrainingPlanGenerateRequest;
+import com.rokas.runtrack.service.AiService;
 import com.rokas.runtrack.service.PlanGenerationService;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -13,13 +15,18 @@ import org.springframework.web.bind.annotation.RestController;
 public class PlanGenerationController {
 
     private final PlanGenerationService planGenerationService;
+    private final AiService aiService;
 
-    public PlanGenerationController(PlanGenerationService planGenerationService) {
+    public PlanGenerationController(PlanGenerationService planGenerationService, AiService aiService) {
         this.planGenerationService = planGenerationService;
+        this.aiService = aiService;
     }
 
     @PostMapping("/generate")
-    public TrainingPlanAiRequest generatePlan(@RequestBody TrainingPlanGenerateRequest request) {
-        return  planGenerationService.buildAiRequest(request);
+    public TrainingPlanAiResponse generatePlan(@RequestBody TrainingPlanGenerateRequest request) {
+
+        TrainingPlanAiRequest aiRequest = planGenerationService.buildAiRequest(request);
+
+        return  aiService.generateTrainingPlan(aiRequest);
     }
 }
