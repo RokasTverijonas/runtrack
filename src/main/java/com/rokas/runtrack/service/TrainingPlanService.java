@@ -1,7 +1,6 @@
 package com.rokas.runtrack.service;
 
-import com.rokas.runtrack.dto.TrainingPlanCreateRequest;
-import com.rokas.runtrack.dto.TrainingPlanResponse;
+import com.rokas.runtrack.dto.*;
 import com.rokas.runtrack.entity.TrainingPlan;
 import com.rokas.runtrack.entity.TrainingPlanStatus;
 import com.rokas.runtrack.entity.User;
@@ -16,10 +15,12 @@ import java.util.List;
 public class TrainingPlanService {
     private final TrainingPlanRepository trainingPlanRepository;
     private final UserService userService;
+    private final TrainingWorkoutService trainingWorkoutService;
 
-    public TrainingPlanService(TrainingPlanRepository trainingPlanRepository, UserService userService) {
+    public TrainingPlanService(TrainingPlanRepository trainingPlanRepository, UserService userService, TrainingWorkoutService trainingWorkoutService) {
         this.trainingPlanRepository = trainingPlanRepository;
         this.userService = userService;
+        this.trainingWorkoutService = trainingWorkoutService;
     }
 
     public TrainingPlanResponse createTrainingPlan(TrainingPlanCreateRequest request) {
@@ -35,6 +36,35 @@ public class TrainingPlanService {
         TrainingPlan savedTrainingPlan = trainingPlanRepository.save(trainingPlan);
 
         return mapToResponse(savedTrainingPlan);
+    }
+
+    public TrainingPlanResponse saveGeneratedPlan(TrainingPlanGenerateRequest originalRequest, TrainingPlanAiResponse aiResponse) {
+
+        User user = userService.getCurrentAuthenticatedUser();
+
+        TrainingPlan trainingPlan = new TrainingPlan();
+        trainingPlan.setUser(user);
+        trainingPlan.setRaceType(originalRequest.raceType());
+        trainingPlan.setRaceDate(originalRequest.raceDate());
+        trainingPlan.setPlanSummary(aiResponse.planSummary());
+        trainingPlan.setStatus(TrainingPlanStatus.ACTIVE);
+
+        TrainingPlan savedPlan = trainingPlanRepository.save(trainingPlan);
+
+        aiResponse.workouts().forEach(workoutAi -> {
+            TrainingWorkoutCreateRequest createRequest = new TrainingWorkoutCreateRequest(
+                    workoutAi.weekNumber(),
+                    workoutAi.dayOfWeek(),
+                    workoutAi.workoutType(),
+                    workoutAi.distanceKm(),
+                    workoutAi.paceTarget(),
+                    workoutAi.description()
+            );
+
+            trainingWorkoutService.createWorkout(savedPlan.getId(), createRequest);
+        });
+
+        return mapToResponse(savedPlan);
     }
 
     public List<TrainingPlanResponse> getCurrentUserTrainingPlans() {
