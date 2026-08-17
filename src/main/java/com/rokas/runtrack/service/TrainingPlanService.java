@@ -83,7 +83,7 @@ public class TrainingPlanService {
                 .orElseThrow(() -> new ResourceNotFoundException("Training plan with id: " + planId + " was not found"));
 
         if (!trainingPlan.getUser().getId().equals(user.getId())) {
-            throw new RuntimeException("Training plan does not belong to this user");
+            throw new ResourceNotFoundException("Training plan does not belong to this user");
         }
         return mapToResponse(trainingPlan);
     }

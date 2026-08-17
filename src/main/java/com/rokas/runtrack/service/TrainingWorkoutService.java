@@ -73,7 +73,7 @@ public class TrainingWorkoutService {
 
         User currentUser = userService.getCurrentAuthenticatedUser();
 
-        if(!trainingWorkout.getTrainingPlan().getId().equals(currentUser.getId())) {
+        if(!trainingWorkout.getTrainingPlan().getUser().getId().equals(currentUser.getId())) {
             throw new ResourceNotFoundException("Training plan with id: " + workoutId + " was not found");
         }
 
