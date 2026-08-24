@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/strava")
@@ -29,20 +30,19 @@ public class StravaController {
     }
 
     @GetMapping("/connect")
-    public ResponseEntity<Void> connect() {
+    public ResponseEntity<Map<String, String>> connect() {
         User currentUser = userService.getCurrentAuthenticatedUser();
         String state = oAuthStateStore.createState(currentUser.getId());
 
         String authorizationUrl1 = stravaOAuthService.buildAuthorizationUrl(state);
 
-        return ResponseEntity
-                .status(HttpStatus.FOUND)
-                .location(URI.create(authorizationUrl1))
-                .build();
+        return ResponseEntity.ok(
+                Map.of("authorizationUrl", authorizationUrl1)
+        );
     }
 
     @GetMapping("/callback")
-    public ResponseEntity<StravaTokenResponse> callback(@RequestParam("code") String code, @RequestParam("state") String state) {
+    public ResponseEntity<Void> callback(@RequestParam("code") String code, @RequestParam("state") String state) {
 
         Long userId = oAuthStateStore.consumeState(state);
         if(userId == null) {
@@ -53,7 +53,10 @@ public class StravaController {
 
         stravaOAuthService.saveStravaToken(response, userId);
 
-        return ResponseEntity.ok(response);
+        return ResponseEntity
+                .status(HttpStatus.FOUND)
+                .location(URI.create("http://localhost:5173/?strava=connected"))
+                .build();
     }
 
     @GetMapping("/athlete")
