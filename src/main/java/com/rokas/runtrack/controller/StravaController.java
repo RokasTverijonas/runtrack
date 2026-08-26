@@ -7,6 +7,7 @@ import com.rokas.runtrack.entity.User;
 import com.rokas.runtrack.security.OAuthStateStore;
 import com.rokas.runtrack.service.StravaOAuthService;
 import com.rokas.runtrack.service.UserService;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -22,6 +23,9 @@ public class StravaController {
     private final StravaOAuthService stravaOAuthService;
     private final UserService userService;
     private final OAuthStateStore oAuthStateStore;
+
+    @Value("${app.frontend-url}")
+    private String frontendUrl;
 
     public StravaController(StravaOAuthService stravaOAuthService, UserService userService, OAuthStateStore oAuthStateStore) {
         this.stravaOAuthService = stravaOAuthService;
@@ -55,7 +59,7 @@ public class StravaController {
 
         return ResponseEntity
                 .status(HttpStatus.FOUND)
-                .location(URI.create("http://localhost:5173/?strava=connected"))
+                .location(URI.create(frontendUrl + "/?strava=connected"))
                 .build();
     }
 
