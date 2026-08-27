@@ -3,6 +3,8 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import { getConnectUrl, getStats, syncActivities, getWeeklyStats } from '../api/strava'
 import WeeklyDistanceChart from '../components/WeeklyDistanceChart'
 
+const weekKm = (week) => Number(week?.totalDistanceKm ?? 0)
+
 function Dashboard() {
   const location = useLocation()
   const navigate = useNavigate()
@@ -67,6 +69,20 @@ function Dashboard() {
     return <div className="page"><p>Loading your running data...</p></div>
   }
 
+  // Week-over-week trend for the "average weekly distance" stat card.
+  let trend = null
+  if (weeklyStats.length >= 2) {
+    const current = weekKm(weeklyStats[weeklyStats.length - 1])
+    const previous = weekKm(weeklyStats[weeklyStats.length - 2])
+    if (previous > 0) {
+      const pctChange = ((current - previous) / previous) * 100
+      trend = {
+        direction: pctChange >= 0 ? 'up' : 'down',
+        value: Math.abs(pctChange).toFixed(0),
+      }
+    }
+  }
+
   return (
     <div className="page">
       <h2>Dashboard</h2>
@@ -83,16 +99,37 @@ function Dashboard() {
       </button>
 
       {stats && (
-        <section>
+        <section className="section">
+          <span className="section-eyebrow">Overview</span>
           <h3>Your stats</h3>
-          <p>Total runs: {stats.totalRuns}</p>
-          <p>Total distance: {stats.totalDistanceKm.toFixed(1)} km</p>
-          <p>Longest run: {stats.longestRunKm.toFixed(1)} km</p>
-          <p>Average weekly distance: {stats.avgWeeklyKm.toFixed(1)} km</p>
+          <div className="stats-grid">
+            <div className="stat-card">
+              <div className="stat-value">{stats.totalRuns}</div>
+              <div className="stat-label">Total runs</div>
+            </div>
+            <div className="stat-card stat-card--accent">
+              <div className="stat-value">{stats.totalDistanceKm.toFixed(1)}<span className="stat-unit">km</span></div>
+              <div className="stat-label">Total distance</div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-value">{stats.longestRunKm.toFixed(1)}<span className="stat-unit">km</span></div>
+              <div className="stat-label">Longest run</div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-value">{stats.avgWeeklyKm.toFixed(1)}<span className="stat-unit">km</span></div>
+              <div className="stat-label">Average weekly distance</div>
+              {trend && (
+                <div className={`stat-trend stat-trend--${trend.direction}`}>
+                  {trend.direction === 'up' ? '▲' : '▼'} {trend.value}% vs last week
+                </div>
+              )}
+            </div>
+          </div>
         </section>
       )}
 
-      <section>
+      <section className="section">
+        <span className="section-eyebrow">Trends</span>
         <h3>Weekly Distance</h3>
         <WeeklyDistanceChart data={weeklyStats} />
       </section>

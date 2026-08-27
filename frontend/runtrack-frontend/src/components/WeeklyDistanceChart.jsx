@@ -18,11 +18,12 @@ export default function WeeklyDistanceChart({ data = [] }) {
 
   const max = Math.max(...items.map((i) => i.totalKm), 1)
   const width = 600
-  const height = 160
+  const height = 180
   const padding = { top: 10, right: 10, bottom: 30, left: 40 }
   const chartWidth = width - padding.left - padding.right
   const chartHeight = height - padding.top - padding.bottom
   const barWidth = Math.max(8, Math.floor(chartWidth / items.length) - 8)
+  const lastIndex = items.length - 1
 
   const formatLabel = (s) => {
     if (!s) return ''
@@ -50,8 +51,8 @@ export default function WeeklyDistanceChart({ data = [] }) {
             const value = Math.round(max * t)
             return (
               <g key={t}>
-                <line x1={0} y1={y} x2={chartWidth} y2={y} stroke="#eee" />
-                <text x={-6} y={y + 4} fontSize="10" textAnchor="end" fill="#666">{value}</text>
+                <line x1={0} y1={y} x2={chartWidth} y2={y} stroke="var(--border)" />
+                <text x={-6} y={y + 4} fontSize="10" textAnchor="end" fill="var(--text)">{value}</text>
               </g>
             )
           })}
@@ -62,12 +63,30 @@ export default function WeeklyDistanceChart({ data = [] }) {
             const h = (it.totalKm / max) * chartHeight
             const y = chartHeight - h
             const labelX = barWidth / 2
+            const isCurrent = idx === lastIndex
             return (
               <g key={idx} transform={`translate(${x},0)`}>
-                <rect x={0} y={y} width={barWidth} height={Math.max(1, h)} fill="#4f46e5">
+                <rect
+                  x={0}
+                  y={y}
+                  width={barWidth}
+                  height={Math.max(1, h)}
+                  rx={2}
+                  style={{ fill: 'var(--accent)' }}
+                  fillOpacity={isCurrent ? 1 : 0.5}
+                >
                   <title>{`${formatLabel(it.weekStart)} — ${it.totalKm.toFixed(1)} km — avg pace: ${formatPace(it.averagePace)}`}</title>
                 </rect>
-                <text x={labelX} y={chartHeight + 14} fontSize="10" textAnchor="middle" fill="#333">{formatLabel(it.weekStart)}</text>
+                <text
+                  x={labelX}
+                  y={chartHeight + 14}
+                  fontSize="10"
+                  textAnchor="middle"
+                  fill="var(--text)"
+                  fontWeight={isCurrent ? 600 : 400}
+                >
+                  {formatLabel(it.weekStart)}
+                </text>
               </g>
             )
           })}

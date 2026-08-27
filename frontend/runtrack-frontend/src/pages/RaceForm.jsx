@@ -45,6 +45,7 @@ function RaceForm() {
         <label htmlFor="raceType">Race type</label>
         <select
           id="raceType"
+          className="form-select"
           value={raceType}
           onChange={(event) => setRaceType(event.target.value)}
           required
@@ -61,6 +62,7 @@ function RaceForm() {
         <input
           id="distanceKm"
           type="number"
+          placeholder="e.g. 42.2"
           value={distanceKm}
           onChange={(event) => setDistanceKm(event.target.value)}
           min="0.1"

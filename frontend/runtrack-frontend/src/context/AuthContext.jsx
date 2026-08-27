@@ -56,6 +56,4 @@ export function AuthProvider({ children }) {
     );
 }
 
-// This hook belongs with its provider; it is safe to keep both in this module.
-// eslint-disable-next-line react-refresh/only-export-components
 export const useAuth = () => useContext(AuthContext)
