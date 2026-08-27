@@ -1,16 +1,15 @@
-import { useEffect, useState } from 'react'
+﻿import { useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { getActivities, getConnectUrl, getStats, syncActivities } from '../api/strava'
-
-
+import { getConnectUrl, getStats, syncActivities, getWeeklyStats } from '../api/strava'
+import WeeklyDistanceChart from '../components/WeeklyDistanceChart'
 
 function Dashboard() {
   const location = useLocation()
   const navigate = useNavigate()
-  
-  const [activities, setActivities] = useState([])
+
   const [stats, setStats] = useState(null)
-  const [error, setError] = useState(' ')
+  const [weeklyStats, setWeeklyStats] = useState([])
+  const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(true)
   const [isConnecting, setIsConnecting] = useState(false)
 
@@ -22,40 +21,31 @@ function Dashboard() {
       const justConnected = new URLSearchParams(location.search).get('strava') === 'connected'
 
       try {
-        if (justConnected) {
-          await syncActivities()
-        }
+        await syncActivities()
 
-        const [activitiesData, statsData] = await Promise.all([
-          getActivities(),
+        const [statsData, weeklyData] = await Promise.all([
           getStats(),
+          getWeeklyStats(),
         ])
 
-        setActivities(activitiesData)
         setStats(statsData)
+        setWeeklyStats(weeklyData)
 
-        if(justConnected) {
-          navigate('/', { replace: true})
+        if (justConnected) {
+          navigate('/', { replace: true })
         }
-       } catch(requestError) {
+      } catch (requestError) {
         setError(
           requestError.response?.data?.message ||
           'Unable to load your running data.'
         )
-       } finally {
+      } finally {
         setIsLoading(false)
-       }
+      }
     }
 
     loadDashboard()
   }, [location.search, navigate])
-
-  const formatPace = (pace) => {
-    const minutes = Math.floor(pace)
-    const seconds = Math.round((pace - minutes) * 60)
-
-    return `${minutes}:${String(seconds).padStart(2, '0')} min/km`
-  }
 
   const handleConnectStrava = async () => {
     setError('')
@@ -84,10 +74,10 @@ function Dashboard() {
 
       {error && <p className="form-error" role="alert">{error}</p>}
       <button
-      type='button'
-      className='nav-btn active'
-      onClick={handleConnectStrava}
-      disabled={isConnecting}
+        type="button"
+        className="nav-btn active"
+        onClick={handleConnectStrava}
+        disabled={isConnecting}
       >
         {isConnecting ? 'Connecting...' : 'Connect Strava'}
       </button>
@@ -103,21 +93,8 @@ function Dashboard() {
       )}
 
       <section>
-        <h3>Recent Activities</h3>
-
-        {activities.length === 0 ? (
-          <p>No Synced activities yet.</p>
-        ) : (
-          <ul>
-            {activities.slice(0, 5).map((activity) => (
-              <li key={activity.id}>
-                {activity.name} - {(activity.distanceMeters / 1000).toFixed(1)} km
-                - pace: {formatPace(activity.avgPace)}
-              </li>
-            ))}
-          </ul>
-        
-        )}
+        <h3>Weekly Distance</h3>
+        <WeeklyDistanceChart data={weeklyStats} />
       </section>
     </div>
   )

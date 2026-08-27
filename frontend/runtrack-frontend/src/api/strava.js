@@ -1,4 +1,4 @@
-import api from './client';
+﻿import api from './client';
 
 export const getConnectUrl = () =>
     api.get('/strava/connect').then((res) => res.data);
