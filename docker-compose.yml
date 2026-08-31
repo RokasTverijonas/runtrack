@@ -11,7 +11,7 @@ services:
     volumes:
       - runtrack-db-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME}"]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME} -d runtrack"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -33,6 +33,17 @@ services:
       STRAVA_CLIENT_ID: ${STRAVA_CLIENT_ID}
       STRAVA_CLIENT_SECRET: ${STRAVA_CLIENT_SECRET}
       GEMINI_API_KEY: ${GEMINI_API_KEY}
+      FRONTEND_URL: ${FRONTEND_URL}
+      STRAVA_REDIRECT_URI: ${STRAVA_REDIRECT_URI}
+
+  frontend:
+    build:
+      context: ./frontend/runtrack-frontend
+    container_name: runtrack-frontend
+    depends_on:
+      - app
+    ports:
+      - "5173:80"
 
 volumes:
   runtrack-db-data:
