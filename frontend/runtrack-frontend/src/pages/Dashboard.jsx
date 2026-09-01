@@ -69,17 +69,18 @@ function Dashboard() {
     return <div className="page"><p>Loading your running data...</p></div>
   }
 
-  // Week-over-week trend for the "average weekly distance" stat card.
+  let currentWeekKm = null
   let trend = null
-  if (weeklyStats.length >= 2) {
-    const current = weekKm(weeklyStats[weeklyStats.length - 1])
-    const previous = weekKm(weeklyStats[weeklyStats.length - 2])
-    if (previous > 0) {
-      const pctChange = ((current - previous) / previous) * 100
-      trend = {
-        direction: pctChange >= 0 ? 'up' : 'down',
-        value: Math.abs(pctChange).toFixed(0),
-      }
+
+  if (weeklyStats.length >= 1) {
+    currentWeekKm = weekKm(weeklyStats[weeklyStats.length - 1])
+  }
+
+  if (currentWeekKm !== null && stats?.avgWeeklyKm > 0) {
+    const pctChange = ((currentWeekKm - stats.avgWeeklyKm) / stats.avgWeeklyKm) * 100
+    trend = {
+      direction: pctChange >= 0 ? 'up' : 'down',
+      value: Math.abs(pctChange).toFixed(0),
     }
   }
 
@@ -118,12 +119,18 @@ function Dashboard() {
             <div className="stat-card">
               <div className="stat-value">{stats.avgWeeklyKm.toFixed(1)}<span className="stat-unit">km</span></div>
               <div className="stat-label">Average weekly distance</div>
-              {trend && (
-                <div className={`stat-trend stat-trend--${trend.direction}`}>
-                  {trend.direction === 'up' ? '▲' : '▼'} {trend.value}% vs last week
-                </div>
-              )}
             </div>
+            {currentWeekKm !== null && (
+              <div className="stat-card">
+                <div className="stat-value">{currentWeekKm.toFixed(1)}<span className="stat-unit">km</span></div>
+                <div className="stat-label">This week</div>
+                {trend && (
+                  <div className={`stat-trend stat-trend--${trend.direction}`}>
+                    {trend.direction === 'up' ? '▲' : '▼'} {trend.value}% vs average
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </section>
       )}

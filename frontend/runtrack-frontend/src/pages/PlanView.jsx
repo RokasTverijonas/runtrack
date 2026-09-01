@@ -1,7 +1,11 @@
 import { useEffect, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { getTrainingPlanWorkouts } from '../api/trainingPlans'
-
+import {
+  getTrainingPlanWorkouts,
+  getCurrentUserTrainingPlans,
+  markWorkoutCompleted,
+} from '../api/trainingPlans'
+ 
 const DAY_INDEX = {
   Monday: 0,
   Tuesday: 1,
@@ -11,7 +15,7 @@ const DAY_INDEX = {
   Saturday: 5,
   Sunday: 6,
 }
-
+ 
 const WORKOUT_TYPES = [
   { match: /rest/i, key: 'rest', label: 'Rest' },
   { match: /interval/i, key: 'interval', label: 'Interval' },
@@ -19,28 +23,27 @@ const WORKOUT_TYPES = [
   { match: /long/i, key: 'long', label: 'Long Run' },
   { match: /race/i, key: 'race', label: 'Race' },
 ]
-
+ 
 function workoutTypeMeta(workoutType) {
   const found = WORKOUT_TYPES.find((entry) => entry.match.test(workoutType || ''))
   return found || { key: 'easy', label: 'Easy Run' }
 }
-
+ 
 function formatShortDate(date) {
   if (!date) return ''
   return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
 }
-
-
+ 
 function computeWeekStarts(workouts, raceDate) {
   if (!workouts.length || !raceDate) return {}
-
+ 
   const totalWeeks = Math.max(...workouts.map((w) => w.weekNumber))
   const race = new Date(`${raceDate}T00:00:00`)
-  const raceDayIndex = (race.getDay() + 6) % 7 
-
+  const raceDayIndex = (race.getDay() + 6) % 7
+ 
   const lastWeekMonday = new Date(race)
   lastWeekMonday.setDate(race.getDate() - raceDayIndex)
-
+ 
   const weekStarts = {}
   for (let week = 1; week <= totalWeeks; week += 1) {
     const monday = new Date(lastWeekMonday)
@@ -49,7 +52,7 @@ function computeWeekStarts(workouts, raceDate) {
   }
   return weekStarts
 }
-
+ 
 function groupByWeek(workouts) {
   return workouts.reduce((groups, workout) => {
     const key = workout.weekNumber
@@ -58,7 +61,14 @@ function groupByWeek(workouts) {
     return groups
   }, {})
 }
-
+ 
+function pickPlanToShow(plans) {
+  if (!plans.length) return null
+  const active = plans.filter((p) => p.status === 'ACTIVE')
+  const pool = active.length ? active : plans
+  return pool.reduce((latest, p) => (p.id > latest.id ? p : latest), pool[0])
+}
+ 
 function EmptyPlanIcon() {
   return (
     <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -67,37 +77,71 @@ function EmptyPlanIcon() {
     </svg>
   )
 }
-
+ 
 function PlanView() {
   const location = useLocation()
-  const plan = location.state?.plan
-
+ 
+  const [plan, setPlan] = useState(location.state?.plan || null)
   const [workouts, setWorkouts] = useState([])
   const [error, setError] = useState('')
-  const [isLoading, setIsLoading] = useState(!!plan)
-
+  const [isLoading, setIsLoading] = useState(true)
+  const [pendingWorkoutId, setPendingWorkoutId] = useState(null)
+ 
   useEffect(() => {
-    if (!plan) {
-      return
-    }
-
-    const loadWorkouts = async () => {
+    const loadPlan = async () => {
+      setError('')
+      setIsLoading(true)
+ 
       try {
-        const data = await getTrainingPlanWorkouts(plan.id)
-        setWorkouts(data)
+        let planToShow = location.state?.plan || null
+ 
+        if (!planToShow) {
+          const plans = await getCurrentUserTrainingPlans()
+          planToShow = pickPlanToShow(plans)
+        }
+ 
+        setPlan(planToShow)
+ 
+        if (planToShow) {
+          const workoutsData = await getTrainingPlanWorkouts(planToShow.id)
+          setWorkouts(workoutsData)
+        }
       } catch (requestError) {
         setError(
           requestError.response?.data?.message ||
-          'Unable to load plan workouts.'
+          'Unable to load your training plan.'
         )
       } finally {
         setIsLoading(false)
       }
     }
-
-    loadWorkouts()
-  }, [plan])
-
+ 
+    loadPlan()
+  }, [location.state])
+ 
+  const handleMarkDone = async (workoutId) => {
+    setError('')
+    setPendingWorkoutId(workoutId)
+ 
+    try {
+      const updated = await markWorkoutCompleted(workoutId)
+      setWorkouts((current) =>
+        current.map((w) => (w.id === workoutId ? updated : w))
+      )
+    } catch (requestError) {
+      setError(
+        requestError.response?.data?.message ||
+        'Unable to update that workout.'
+      )
+    } finally {
+      setPendingWorkoutId(null)
+    }
+  }
+ 
+  if (isLoading) {
+    return <div className="page"><p>Loading your workouts...</p></div>
+  }
+ 
   if (!plan) {
     return (
       <div className="page">
@@ -111,19 +155,15 @@ function PlanView() {
       </div>
     )
   }
-
-  if (isLoading) {
-    return <div className="page"><p>Loading your workouts...</p></div>
-  }
-
+ 
   const weekStarts = computeWeekStarts(workouts, plan.raceDate)
   const weekGroups = groupByWeek(workouts)
   const weekNumbers = Object.keys(weekGroups).map(Number).sort((a, b) => a - b)
-
+ 
   return (
     <div className="page">
       <h2>{plan.raceType} training plan</h2>
-
+ 
       <div className="plan-summary-card">
         <div className="plan-summary-row">
           <div>
@@ -136,13 +176,13 @@ function PlanView() {
         </div>
         <p className="plan-summary-text">{plan.planSummary}</p>
       </div>
-
+ 
       {error && <p className="form-error" role="alert">{error}</p>}
-
+ 
       <section className="section">
         <span className="section-eyebrow">Schedule</span>
         <h3>Workouts</h3>
-
+ 
         {workouts.length === 0 ? (
           <p>No workouts were generated.</p>
         ) : (
@@ -150,7 +190,7 @@ function PlanView() {
             const weekMonday = weekStarts[weekNumber]
             const weekSunday = weekMonday ? new Date(weekMonday) : null
             if (weekSunday) weekSunday.setDate(weekSunday.getDate() + 6)
-
+ 
             return (
               <div className="week-group" key={weekNumber}>
                 <div className="week-group-header">
@@ -161,7 +201,7 @@ function PlanView() {
                     </span>
                   )}
                 </div>
-
+ 
                 <div className="workout-list">
                   {weekGroups[weekNumber].map((workout) => {
                     const dayOffset = DAY_INDEX[workout.dayOfWeek]
@@ -169,7 +209,8 @@ function PlanView() {
                       ? new Date(weekMonday.getTime() + dayOffset * 86400000)
                       : null
                     const typeMeta = workoutTypeMeta(workout.workoutType)
-
+                    const isPending = pendingWorkoutId === workout.id
+ 
                     return (
                       <div className={`workout-card workout-card--${typeMeta.key}`} key={workout.id}>
                         <div className="workout-body">
@@ -180,7 +221,18 @@ function PlanView() {
                                 <span className="workout-date"> · {formatShortDate(workoutDate)}</span>
                               )}
                             </span>
-                            {workout.completed && <span className="workout-done">Done</span>}
+                            {workout.completed ? (
+                              <span className="workout-done">Done</span>
+                            ) : (
+                              <button
+                                type="button"
+                                className="mark-done-btn"
+                                onClick={() => handleMarkDone(workout.id)}
+                                disabled={isPending}
+                              >
+                                {isPending ? 'Saving…' : 'Mark done'}
+                              </button>
+                            )}
                           </div>
                           <div className="workout-title-row">
                             <span className={`type-badge type-badge--${typeMeta.key}`}>
@@ -205,5 +257,6 @@ function PlanView() {
     </div>
   )
 }
-
+ 
 export default PlanView
+ 

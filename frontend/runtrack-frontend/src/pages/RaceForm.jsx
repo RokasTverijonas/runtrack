@@ -35,7 +35,8 @@ function RaceForm() {
   }
 
   return (
-    <div className="page">
+    <div className="race-form-page">
+      <div className='race-form-container'>
       <h2>Create a training plan</h2>
       <p>Enter your target race details.</p>
 
@@ -88,6 +89,7 @@ function RaceForm() {
           {isGenerating ? 'Generating plan…' : 'Generate plan'}
         </button>
       </form>
+      </div>
     </div>
   )
 }
