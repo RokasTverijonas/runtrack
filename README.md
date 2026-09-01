@@ -45,7 +45,7 @@ cd runtrack
 ```
 ### Environment variables
 
-Create a `.env` file in the project root:
+Create a `.env` file in the project root with these variables:
 
 - DB_USERNAME
 - DB_PASSWORD
